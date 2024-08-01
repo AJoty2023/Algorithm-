@@ -1,0 +1,538 @@
+A. Shortest Path
+
+Given an undirected weighted graph find its all pair shortest path cost. The graph may have multiple edges between two vertices. 
+
+Input 
+First Line: N (O<N<=100). number of nodes. 
+Second line: M (0<N<=10000), number of edges. 
+Next M lines, each: U V (0<=U, V<N, 0<W<=1000), defines an edge between U and V with weight W. 
+
+
+Output 
+All pair shortest path in increasing order of nodes. In case of no path, print “infinity”. See sample for clarification 
+
+Sample
+
+Input
+6
+5
+1 3 2
+1 2 5
+0 1 3
+3 2 1
+2 5 10
+Output
+0 to 1: 3
+0 to 2: 6
+0 to 3: 5
+0 to 4: infinity
+0 to 5: 16
+1 to 2: 3
+1 to 3: 2
+1 to 4: infinity
+1 to 5: 13
+2 to 3: 1
+2 to 4: infinity
+2 to 5: 10
+3 to 4: infinity
+3 to 5: 11
+4 to 5: infinity
+
+
+
+51_A.cpp
+#include <bits/stdc++.h>
+using namespace std;
+
+#define INF 999
+
+void floydWarshall(vector<vector<int>> &dist, int V)
+{
+    // Floyd-Warshall algorithm
+    for (int k = 0; k < V; ++k)
+    {
+        for (int i = 0; i < V; ++i)
+        {
+            for (int j = 0; j < V; ++j)
+            {
+
+                if (dist[i][k] != INF && dist[k][j] != INF)
+                {
+                    dist[i][j] = min(dist[i][j], dist[i][k] + dist[k][j]);
+                }
+            }
+        }
+    }
+}
+
+int main()
+{
+    int V, E;
+
+    cin >> V >> E;
+
+    vector<vector<int>> dist(V, vector<int>(V, INF));
+
+    for (int i = 0; i < V; i++)
+    {
+        dist[i][i] = 0;
+    }
+
+    for (int i = 0; i < E; i++)
+    {
+        int u, v, w;
+        cin >> u >> v >> w;
+        dist[u][v] = dist[v][u] = min(dist[u][v], w); // Handle multiple edges by keeping the minimum weight
+    }
+
+    floydWarshall(dist, V);
+
+    // print the result
+    for (int i = 0; i < V; i++)
+    {
+        for (int j = i + 1; j < V; j++)
+        {
+            if (dist[i][j] == INF)
+            {
+                cout << i << " to " << j << ": infinity\n";
+            }
+            else
+            {
+                cout << i << " to " << j << ": " << dist[i][j] << "\n";
+            }
+        }
+    }
+
+    return 0;
+}
+
+
+B.Suppose there is a connected undirected weighted graph G1 with vertices v1, v2, …, vn. Now, you will create another graph G2 by adding a vertex from G1 along with the edges adjacent to it in each step. Your task is to find the sum of the all pair shortest path costs after each step. The vertices will be added in increasing order.
+
+Input 
+First Line: N (O<N<=100). number of nodes. 
+Second line: M (0<N<=10000), number of edges. 
+Next M lines, each: U V (0<=U, V<N, 0<W<=1000), defines an edge between U and V with weight W. 
+
+
+Output 
+Sum of the all pair shortest path costs after each step. See sample for clarification 
+
+
+Sample
+
+Input
+4
+4
+0 2 1
+0 1 2
+1 2 4
+1 3 2
+Output
+0
+2
+6
+17
+
+
+
+
+
+In the first step, we add vertex 0 to G2 only. So, the sum of the all pair shortest path cost in G2 is currently 0.
+
+In the second step, we add vertex 1 to G2 and the edge between 0 and 1 with weight 2. The sum of the all pair shortest path cost in G2 is currently 2.
+
+In the third step, we add vertex 2 to G2 and the edges (0, 2) and (1, 2) with weights 1 and 4. The sum of the all pair shortest path cost in G2 becomes 6.
+
+
+51_B.cpp
+#include <iostream>
+#include <vector>
+#include <limits>
+
+using namespace std;
+
+#define INF 999
+
+vector<vector<int>> floydWarshall(vector<vector<pair<int, int>>> &adjList)
+{
+    int V = adjList.size();
+    vector<vector<int>> dist(V, vector<int>(V, INF));
+
+    for (int i = 0; i < V; ++i)
+    {
+        dist[i][i] = 0;
+        for (const auto &neighbor : adjList[i])
+        {
+            int v = neighbor.first;
+            int weight = neighbor.second;
+            dist[i][v] = min(dist[i][v], weight); // Store the minimum weight
+        }
+    }
+    
+    for (int k = 0; k < V; ++k)
+    {
+        for (int i = 0; i < V; ++i)
+        {
+            for (int j = 0; j < V; ++j)
+            {
+                if (dist[i][k] != INF && dist[k][j] != INF)
+                {
+                    dist[i][j] = min(dist[i][j], dist[i][k] + dist[k][j]);
+                }
+            }
+        }
+    }
+    return dist;
+}
+
+void printResult(vector<vector<int>> &allShortestPaths)
+{
+    int V = allShortestPaths.size();
+    int sum = 0;
+    for (int i = 0; i < V; ++i)
+    {
+        for (int j = 0; j <= i; ++j)
+        {
+            if (allShortestPaths[i][j] != INF)
+            {
+                sum += allShortestPaths[i][j];
+            }
+        }
+        cout << sum << endl;
+    }
+}
+
+int main()
+{
+    int N, M;
+    cin >> N >> M;
+
+    vector<vector<pair<int, int>>> adjList(N);
+
+    for (int i = 0; i < M; ++i)
+    {
+        int u, v, weight;
+        cin >> u >> v >> weight;
+        adjList[u].emplace_back(v, weight);
+        adjList[v].emplace_back(u, weight); // Add this line for an undirected graph
+    }
+
+    vector<vector<int>> allShortestPaths = floydWarshall(adjList);
+
+    printResult(allShortestPaths);
+
+    return 0;
+}
+
+
+C. Shortest Path III
+
+Given a directed weighted graph find its all pair shortest path cost. The graph may have multiple edges between two vertices. 
+
+Input 
+First Line: N (O<N<=500). number of nodes. 
+Second line: M (0<N<=1000), number of edges. 
+Next M lines, each: U V (0<=U, V<N, -1000<=W<=1000), defines an edge from U to V with weight W. 
+
+
+Output 
+All pair shortest path in increasing order of nodes. In case of no path, print “infinity”. In case of negative weight cycle, print “not possible”. See sample for clarification 
+
+Sample
+
+Input
+4
+4
+0 2 1
+0 1 2
+1 2 4
+1 3 2
+Output
+0 to 1: 2
+0 to 2: 1
+0 to 3: 4
+1 to 0: infinity
+1 to 2: 4
+1 to 3: 2
+2 to 0: infinity
+2 to 1: infinity
+2 to 3: infinity
+3 to 0: infinity
+3 to 1: infinity
+3 to 2: infinity
+
+
+
+51_C.cpp
+#include <bits/stdc++.h>
+using namespace std;
+
+const int INF = numeric_limits<int>::max();
+
+int minDistance(vector<int> &dist, vector<bool> &visited)
+{
+    int minDist = INF;
+    int minVertex = -1;
+
+    for (int v = 0; v < dist.size(); v++)
+    {
+        if (!visited[v] && dist[v] <= minDist)
+        {
+            minDist = dist[v];
+            minVertex = v;
+        }
+    }
+
+    return minVertex;
+}
+
+void Dijkstra(vector<vector<int>> &graph, vector<vector<int>> &modifiedGraph, int src)
+{
+    int numVertices = graph.size();
+    vector<bool> sptSet(numVertices, false);
+    vector<int> dist(numVertices, INF);
+
+    dist[src] = 0;
+
+    for (int count = 0; count < numVertices; count++)
+    {
+        int curVertex = minDistance(dist, sptSet);
+        sptSet[curVertex] = true;
+
+        for (int v = 0; v < numVertices; v++)
+        {
+            if (!sptSet[v] && dist[curVertex] != INF &&
+                (dist[curVertex] + modifiedGraph[curVertex][v]) < dist[v] &&
+                graph[curVertex][v] != 0)
+            {
+                dist[v] = dist[curVertex] + modifiedGraph[curVertex][v];
+            }
+        }
+    }
+
+    for (int vertex = 0; vertex < numVertices; vertex++)
+    {
+        if (vertex == src)
+        {
+            continue;
+        }
+
+        cout << src << " to " << vertex << ": ";
+        if (dist[vertex] == INF)
+        {
+            cout << "infinity" << endl;
+        }
+        else
+        {
+            cout << dist[vertex] << endl;
+        }
+    }
+}
+
+vector<int> BellmanFord(vector<vector<int>> &edges, vector<vector<int>> &graph)
+{
+    int numVertices = graph.size();
+    vector<int> dist(numVertices + 1, INF);
+    dist[numVertices] = 0;
+
+    for (int i = 0; i < numVertices; i++)
+    {
+        edges.push_back({numVertices, i, 0});
+    }
+
+    for (int i = 0; i < numVertices; i++)
+    {
+        for (const vector<int> &edge : edges)
+        {
+            int src = edge[0];
+            int des = edge[1];
+            int weight = edge[2];
+
+            if (dist[src] != INF && dist[src] + weight < dist[des])
+            {
+                dist[des] = dist[src] + weight;
+            }
+        }
+    }
+
+    return vector<int>(dist.begin(), dist.begin() + numVertices);
+}
+
+void JohnsonAlgorithm(vector<vector<int>> &graph)
+{
+    int numVertices = graph.size();
+    vector<vector<int>> edges;
+
+    // Create a list of edges for Bellman-Ford Algorithm
+    for (int i = 0; i < numVertices; i++)
+    {
+        for (int j = 0; j < numVertices; j++)
+        {
+            if (graph[i][j] != 0)
+            {
+                edges.push_back({i, j, graph[i][j]});
+            }
+        }
+    }
+
+    vector<int> modifyWeights = BellmanFord(edges, graph);
+
+    vector<vector<int>> modifiedGraph(numVertices, vector<int>(numVertices, 0));
+
+    // Modify the weights to get rid of negative weights
+    for (int i = 0; i < numVertices; i++)
+    {
+        for (int j = 0; j < numVertices; j++)
+        {
+            if (graph[i][j] != 0)
+            {
+                modifiedGraph[i][j] = graph[i][j] + modifyWeights[i] - modifyWeights[j];
+            }
+        }
+    }
+
+    for (int src = 0; src < numVertices; src++)
+    {
+        Dijkstra(graph, modifiedGraph, src);
+    }
+}
+
+int main()
+{
+    int V, E;
+
+    cin >> V >> E;
+
+    vector<vector<int>> graph(V, vector<int>(V));
+
+    for (int i = 0; i < E; i++)
+    {
+        int src, des, weight;
+        cin >> src >> des >> weight;
+        graph[src][des] = weight;
+    }
+
+    JohnsonAlgorithm(graph);
+
+    return 0;
+}
+
+
+D. Shortest Path IV
+
+Suppose there are n apartments in a city connected through roads. You have to deliver a product in a set of apartments maintaining a certain order. Find the minimum distance you must have to travel. Assume that, you are already in the apartment you need to deliver first.
+
+Input 
+First Line: N (0<N<=100). number of apartments. 
+Second line: M (0<N<=10000), number of roads. 
+Next M lines, each: U V (0<=U, V<N, 0<W<=1000), defines an road between apartment U and V with distance W.
+Next line: R (0<=R<N), the number of apartments to deliver the product.
+Next R lines: A (0<=A<N), the apartment number according to the delivery order.
+ 
+
+
+Output 
+Minimum distance you must have to travel. In case of no path, print “infinity”. See sample for clarification 
+
+Sample
+
+Input
+4
+4
+0 2 1
+0 1 2
+1 2 4
+1 3 2
+3
+1
+2
+3
+Output
+8
+
+
+
+51_D.cpp
+#include <bits/stdc++.h>
+using namespace std;
+
+const int INF = numeric_limits<int>::max();
+
+// Function to perform Dijkstra's algorithm
+int dijkstra(vector<vector<pair<int, int>>> &adjList, int start, int end)
+{
+    int n = adjList.size();
+    vector<int> dist(n, INF);
+    dist[start] = 0;
+
+    set<pair<int, int>> minDistSet;                                                                                                                                                                             
+    minDistSet.insert({0, start});
+
+    while (!minDistSet.empty())
+    {
+        int u = minDistSet.begin()->second;
+        minDistSet.erase(minDistSet.begin());
+
+        for (const auto &neighbor : adjList[u])
+        {
+            int v = neighbor.first;
+            int weight = neighbor.second;
+
+            if (dist[u] != INF && dist[u] + weight < dist[v])
+            {
+                minDistSet.erase({dist[v], v});
+                dist[v] = dist[u] + weight;
+                minDistSet.insert({dist[v], v});
+            }
+        }
+    }
+
+    return dist[end];
+}
+
+int main()
+{
+    int N, M;
+    cin >> N >> M;
+
+    vector<vector<pair<int, int>>> adjList(N);
+
+    for (int i = 0; i < M; i++)
+    {
+        int u, v, w;
+        cin >> u >> v >> w;
+        adjList[u].push_back({v, w});
+        adjList[v].push_back({u, w}); // Assuming roads are bidirectional
+    }
+
+    int R;
+    cin >> R;
+
+    vector<int> order(R);
+    for (int i = 0; i < R; i++)
+    {
+        cin >> order[i];
+    }
+
+    int totalDistance = 0;
+
+    for (int i = 1; i < R; i++)
+    {
+        int start = order[i - 1];
+        int end = order[i];
+        int distance = dijkstra(adjList, start, end);
+
+        if (distance == INF)
+        {
+            cout << "infinity\n";
+            return 0;
+        }
+
+        totalDistance += distance;
+    }
+
+    cout << totalDistance << endl;
+
+    return 0;
+}

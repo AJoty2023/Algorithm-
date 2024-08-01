@@ -1,0 +1,471 @@
+A. Bridges 
+
+Given an undirected graph find all of its bridges. 
+
+Input 
+First Line: N (O<N<=100000). number of nodes. 
+Second line: M (0<N<=300000), number of edges. 
+Next M lines, each: U V (0<=U, V<N), defines an edge between U and V. 
+
+
+Output 
+List all the bridges in increasing order. For each edge the first node should be smaller than the second. When sorting, edges with smaller first should come first. If two edge has the same first node, then the edge with smaller second node should come first. See sample for clarification 
+
+Sample
+
+Input
+6
+6
+1 3
+1 2
+2 3
+0 1
+3 4
+5 0
+Output
+0 1
+0 5
+3 4 
+
+
+
+51_A.cpp
+#include <bits/stdc++.h>
+using namespace std;
+
+void dfs(int u, const vector<vector<int>> &adj, vector<int> &disc, vector<int> &low, vector<int> &parent, vector<pair<int, int>> &bridges, int &time)
+{
+    disc[u] = low[u] = ++time;
+
+    for (int v : adj[u])
+    {
+        if (disc[v] == -1)
+        {
+            parent[v] = u;
+            dfs(v, adj, disc, low, parent, bridges, time);
+            low[u] = min(low[u], low[v]);
+
+            if (low[v] > disc[u])
+                bridges.emplace_back(min(u, v), max(u, v));
+        }
+        else if (v != parent[u])
+        {
+            low[u] = min(low[u], disc[v]);
+        }
+    }
+}
+
+int main()
+{
+    int N, M;
+    cin >> N >> M;
+
+    vector<vector<int>> adj(N);
+    vector<int> disc(N, -1), low(N, -1), parent(N, -1);
+    vector<pair<int, int>> bridges;
+    int time = 0;
+
+    for (int i = 0; i < M; ++i)
+    {
+        int u, v;
+        cin >> u >> v;
+        adj[u].push_back(v);
+        adj[v].push_back(u);
+    }
+
+    for (int i = 0; i < N; ++i)
+    {
+        if (disc[i] == -1)
+            dfs(i, adj, disc, low, parent, bridges, time);
+    }
+
+    sort(bridges.begin(), bridges.end());
+
+    for (const auto &bridge : bridges)
+    {
+        cout << bridge.first << " " << bridge.second << endl;
+    }
+
+    return 0;
+}
+
+
+B. Biconnected Components 
+
+Given an undirected graph find all of its biconnected components. Print the components in increasing order. Remember in a biconnected component, you mention the edges that make the component, as a node can be shared between multiple components. 
+
+
+Input 
+First line: N ( O<N<100000), number of nodes.
+Second line: M (0<N<.300000), number of edges. 
+Next M tines, each: U V (0<=U, V<N), defines an edge between U and V. 
+
+Output 
+List all the BCC in increasing order. See sample for clarification 
+
+Sample
+
+Input
+6
+5
+1 3
+1 2
+0 1
+3 2
+2 5
+Output
+0 1
+-
+1 2
+1 3
+2 3
+-
+2 5
+
+
+
+51_B.cpp
+#include <iostream>
+#include <vector>
+#include <stack>
+#include <algorithm>
+using namespace std;
+
+const int MAXN = 100000;
+
+vector<int> graph[MAXN];
+vector<pair<int, int>> edges;
+vector<vector<pair<int, int>>> bcc; // Biconnected components
+stack<pair<int, int>> st;           // Stack for DFS traversal
+int disc[MAXN], low[MAXN], parent[MAXN];
+int dfsTime = 0;
+
+void dfsBCC(int u, int p)
+{
+    disc[u] = low[u] = ++dfsTime;
+    int childCount = 0;
+
+    for (int v : graph[u])
+    {
+        if (disc[v] == 0)
+        {
+            childCount++;
+            st.push({u, v});
+            parent[v] = u;
+            dfsBCC(v, u);
+
+            low[u] = min(low[u], low[v]);
+
+            if (low[v] >= disc[u])
+            {
+                vector<pair<int, int>> component;
+                while (!st.empty() && st.top() != make_pair(u, v))
+                {
+                    component.push_back(st.top());
+                    st.pop();
+                }
+                component.push_back(st.top());
+                st.pop();
+                bcc.push_back(component);
+            }
+        }
+        else if (v != p && disc[v] < disc[u])
+        {
+            st.push({u, v});
+            low[u] = min(low[u], disc[v]);
+        }
+        // sort(component.begin(),component.end());
+    }
+}
+
+void findBCC(int n)
+{
+    dfsTime = 0;
+    bcc.clear();
+    for (int i = 0; i < n; ++i)
+    {
+        disc[i] = 0;
+        low[i] = 0;
+        parent[i] = -1;
+    }
+
+    for (int i = 0; i < n; ++i)
+    {
+        if (disc[i] == 0)
+        {
+            dfsBCC(i, -1);
+        }
+    }
+}
+
+int main()
+{
+    int n, m;
+    cin >> n >> m;
+
+    for (int i = 0; i < m; ++i)
+    {
+        int u, v;
+        cin >> u >> v;
+        graph[u].push_back(v);
+        graph[v].push_back(u);
+        edges.push_back({u, v});
+    }
+
+    findBCC(n);
+    sort(bcc.begin(), bcc.end());
+    // Sorting each biconnected component's edges and printing them
+    for (auto &component : bcc)
+    {
+        sort(component.begin(), component.end());
+        for (auto edge : component)
+        {
+            cout << edge.first << " " << edge.second << endl;
+        }
+        cout << "-" << endl;
+    }
+
+    return 0;
+}
+
+
+C. MST
+
+Given an undirected weighted graph find its minimum spanning tree. The graph is guaranteed to be connected. 
+
+Input 
+First line: N (0<N<=100000), number of nodes. 
+Second line: M (0<N<=300000), number of edges. 
+Next M lines, each: U V W(0<=U, V<N), defines an edge between U and V with weight W. 
+
+Output 
+Weight of the MST. See sample for clarification 
+
+Sample 
+
+Input
+6
+6
+1 3 2
+1 2 5
+0 1 3
+3 2 1
+3 4 50
+2 5 10
+Output
+66
+
+
+
+
+
+Explanation: 
+Edges in MST are: 0-1 (3), 1-3 (2), 3-2 (1), 3-4 (50) and 2-5 (10). So the result is 3 + 2 + 1 + 50 + 10 = 66. 
+
+51_C.cpp
+#include <bits/stdc++.h>
+using namespace std;
+
+class UnionFind
+{
+private:
+    vector<int> parent, rank;
+
+public:
+    UnionFind(int size)
+    {
+        parent.resize(size);
+        rank.resize(size, 0);
+        for (int i = 0; i < size; ++i)
+            parent[i] = i;
+    }
+
+    int find(int x)
+    {
+        if (parent[x] != x)
+            parent[x] = find(parent[x]);
+        return parent[x];
+    }
+
+    void unite(int x, int y)
+    {
+        int rootX = find(x);
+        int rootY = find(y);
+        if (rootX == rootY)
+            return;
+
+        if (rank[rootX] < rank[rootY])
+            parent[rootX] = rootY;
+        else if (rank[rootX] > rank[rootY])
+            parent[rootY] = rootX;
+        else
+        {
+            parent[rootY] = rootX;
+            rank[rootX]++;
+        }
+    }
+};
+
+struct Edge
+{
+    int u, v, weight;
+
+    bool operator<(const Edge &other) const
+    {
+        return weight < other.weight; // Sort in ascending order of weight
+    }
+};
+
+int minSpanningTreeWeight(int N, vector<Edge> &edges)
+{
+    sort(edges.begin(), edges.end());
+
+    UnionFind uf(N);
+    int minSpanningWeight = 0;
+
+    for (const Edge &edge : edges)
+    {
+        if (uf.find(edge.u) != uf.find(edge.v))
+        {
+            uf.unite(edge.u, edge.v);
+            minSpanningWeight += edge.weight;
+        }
+    }
+
+    return minSpanningWeight;
+}
+
+int main()
+{
+    int N, M;
+    cin >> N >> M;
+
+    vector<Edge> edges(M);
+    for (int i = 0; i < M; ++i)
+    {
+        cin >> edges[i].u >> edges[i].v >> edges[i].weight;
+    }
+
+    int minSpanningWeight = minSpanningTreeWeight(N, edges);
+    cout << minSpanningWeight << endl;
+
+    return 0;
+}
+
+
+D. MaxST
+
+Given an undirected weighted graph find its maximum spanning tree. The graph is guaranteed to be connected. 
+
+Input 
+First line: N (0<N<=100000), number of nodes. 
+Second line: M (0<N<=300000), number of edges. 
+Next M lines, each: U V W(0<=U, V<N), defines an edge between U and V with weight W. 
+
+Output 
+Weight of the Maximum Spanning Tree. See sample for clarification 
+
+Sample 
+
+Input
+5
+4
+3 1 8
+4 2 7
+0 3 6
+3 4 9
+Output
+30
+
+
+
+51_D.cpp
+#include <bits/stdc++.h>
+using namespace std;
+
+class UnionFind
+{
+private:
+    vector<int> parent, rank;
+
+public:
+    UnionFind(int size)
+    {
+        parent.resize(size);
+        rank.resize(size, 0);
+        for (int i = 0; i < size; ++i)
+            parent[i] = i;
+    }
+
+    int find(int x)
+    {
+        if (parent[x] != x)
+            parent[x] = find(parent[x]);
+        return parent[x];
+    }
+
+    void unite(int x, int y)
+    {
+        int rootX = find(x);
+        int rootY = find(y);
+        if (rootX == rootY)
+            return;
+
+        if (rank[rootX] < rank[rootY])
+            parent[rootX] = rootY;
+        else if (rank[rootX] > rank[rootY])
+            parent[rootY] = rootX;
+        else
+        {
+            parent[rootY] = rootX;
+            rank[rootX]++;
+        }
+    }
+};
+
+struct Edge
+{
+    int u, v, weight;
+
+    bool operator<(const Edge &other) const
+    {
+        return weight > other.weight; // Sort in descending order of weight
+    }
+};
+
+int maxSpanningTreeWeight(int N, vector<Edge> &edges)
+{
+    sort(edges.begin(), edges.end());
+
+    UnionFind uf(N);
+    int maxSpanningWeight = 0;
+
+    for (const Edge &edge : edges)
+    {
+        if (uf.find(edge.u) != uf.find(edge.v))
+        {
+            uf.unite(edge.u, edge.v);
+            maxSpanningWeight += edge.weight;
+        }
+    }
+
+    return maxSpanningWeight;
+}
+
+int main()
+{
+    int N, M;
+    cin >> N >> M;
+
+    vector<Edge> edges(M);
+    for (int i = 0; i < M; ++i)
+    {
+        cin >> edges[i].u >> edges[i].v >> edges[i].weight;
+    }
+
+    int maxSpanningWeight = maxSpanningTreeWeight(N, edges);
+    cout << maxSpanningWeight << endl;
+
+    return 0;
+}
+

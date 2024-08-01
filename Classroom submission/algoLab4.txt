@@ -1,0 +1,374 @@
+A. Shortest Path I
+
+Given an undirected weighted graph find shortest path of each node from the node 0. 
+
+Input 
+First Line: N (O<N<=100000). number of nodes. 
+Second line: M (0<N<=300000), number of edges. 
+Next M lines, each: U V W(0<=U, V<N, 1<=W<=10^6), defines an edge between U and V with weight W. 
+
+
+Output 
+Shortest path of each node. If any node is unreachable, print -1. See sample for clarification.
+
+Sample
+
+Input
+7
+6
+1 3 2
+1 2 5
+0 1 3
+3 2 1
+3 4 50
+2 5 10
+Output
+0: 0
+1: 3
+2: 6
+3: 5
+4: 55
+5: 16
+6: -1 
+
+
+
+51_A.cpp
+#include <iostream>
+#include <vector>
+#include <queue>
+#include <climits>
+
+using namespace std;
+
+typedef pair<int, int> pii; // Pair of (distance, vertex)
+
+vector<int> dijkstra(const vector<vector<pii>> &graph, int source)
+{
+    int n = graph.size();
+    vector<int> distance(n, INT_MAX);
+    distance[source] = 0;
+
+    priority_queue<pii, vector<pii>, greater<pii>> pq; // Min-heap
+
+    pq.push({0, source});
+
+    while (!pq.empty())
+    {
+        int dist = pq.top().first;
+        int current = pq.top().second;
+        pq.pop();
+
+        if (dist > distance[current])
+        {
+            continue; // Skip if already processed
+        }
+
+        for (const pii &neighbor : graph[current])
+        {
+            int neighborVertex = neighbor.second;
+            int edgeWeight = neighbor.first;
+
+            if (distance[current] + edgeWeight < distance[neighborVertex])
+            {
+                distance[neighborVertex] = distance[current] + edgeWeight;
+                pq.push({distance[neighborVertex], neighborVertex});
+            }
+        }
+    }
+
+    return distance;
+}
+
+int main()
+{
+    int n, m; // Number of vertices and edges
+    cin >> n >> m;
+
+    vector<vector<pii>> graph(n);
+
+    for (int i = 0; i < m; ++i)
+    {
+        int u, v, w; // Edge from u to v with weight w
+        cin >> u >> v >> w;
+        graph[u].push_back({w, v});
+        graph[v].push_back({w, u}); // For undirected graph
+    }
+
+    vector<int> shortestDistances = dijkstra(graph, 0);
+
+    for (int i = 0; i < n; ++i)
+    {
+        cout << i << ": ";
+        if (shortestDistances[i] == INT_MAX)
+        {
+            cout << "-1\n";
+        }
+        else
+        {
+            cout << shortestDistances[i] << "\n";
+        }
+    }
+
+    return 0;
+}
+
+
+B. Shortest Path II
+
+Given an undirected weighted graph print the shortest path of node 1 from the node 0. If there are multiple shortest paths, print the lexicographically smallest one. 
+
+
+Input 
+First line: N ( O<N<=100000), number of nodes.
+Second line: M (0<N<=300000), number of edges. 
+Next M lines, each: U V W(0<=U, V<N, 1<=W<=10^6), defines an edge between U and V with weight W. 
+
+Output 
+Shortest path of node 1. If node is not reachable, print “NOT REACHABLE”. See sample for clarification.
+
+Sample
+
+Input
+7
+6
+4 3 2
+4 2 5
+0 4 3
+3 2 1
+3 6 50
+2 1 10
+Output
+0
+4
+2
+1
+
+
+
+51_B.cpp
+#include <iostream>
+#include <vector>
+#include <queue>
+#include <algorithm>
+using namespace std;
+
+const int INF = 1e9;
+
+struct Edge
+{
+    int to, weight;
+    Edge(int t, int w) : to(t), weight(w) {}
+};
+
+bool operator>(const Edge &a, const Edge &b)
+{
+    return a.weight > b.weight || (a.weight == b.weight && a.to > b.to);
+}
+
+int main()
+{
+    int N, M;
+    cin >> N >> M;
+
+    vector<vector<Edge>> graph(N);
+    for (int i = 0; i < M; ++i)
+    {
+        int U, V, W;
+        cin >> U >> V >> W;
+        graph[U].emplace_back(V, W);
+        graph[V].emplace_back(U, W);
+    }
+
+    vector<int> distance(N, INF);
+    vector<int> parent(N, -1);
+
+    priority_queue<Edge, vector<Edge>, greater<Edge>> pq;
+    pq.push(Edge(0, 0));
+    distance[0] = 0;
+
+    while (!pq.empty())
+    {
+        Edge curr = pq.top();
+        pq.pop();
+
+        int u = curr.to;
+        int w = curr.weight;
+
+        if (w > distance[u])
+        {
+            continue; // Skip outdated entries in the priority queue
+        }
+
+        for (const Edge &e : graph[u])
+        {
+            int v = e.to;
+            int new_dist = w + e.weight;
+
+            if (new_dist < distance[v])
+            {
+                distance[v] = new_dist;
+                parent[v] = u;
+                pq.push(Edge(v, new_dist));
+            }
+        }
+    }
+
+    if (distance[1] == INF)
+    {
+        cout << "NOT REACHABLE" << endl;
+    }
+    else
+    {
+        vector<int> shortest_path;
+        int current = 1;
+        while (current != -1)
+        {
+            shortest_path.push_back(current);
+            current = parent[current];
+        }
+
+        reverse(shortest_path.begin(), shortest_path.end());
+
+        for (int i = 0; i < shortest_path.size(); ++i)
+        {
+            cout << shortest_path[i] << endl;
+            if (i != shortest_path.size() - 1)
+            {
+                cout << flush;
+            }
+        }
+    }
+
+    return 0;
+}
+
+
+C. Shortest Path III
+
+Given an directed weighted graph find its minimum spanning tree. The graph is guaranteed to be connected. 
+
+Input 
+First line: N (0<N<=150), number of nodes. 
+Second line: M (0<N<=5000), number of edges. 
+Next M lines, each: U V W(0<=U, V<N, -1000<=W<=1000), defines an edge from U to V with weight W. 
+Next line: Q (1<=Q<=1000), number of queries.
+Next Q lines: X Y (0<=X, Y<N), a query containing a pair of vertices.
+
+Output 
+For each query, find the shortest distance between the pair of vertices. In case of no path or -Infinity, print IMPOSSIBLE. See sample for clarification.
+
+Sample 
+
+Input
+4
+3
+0 1 2
+1 2 2
+3 3 1
+4
+0 2
+1 2
+3 0
+3 3
+Output
+4
+2
+Impossible
+0
+
+
+
+2 
+1
+0 1 100
+q
+0 1
+1 0
+100
+Impossible
+
+51_C.cpp
+#include <iostream>
+#include <vector>
+#include <queue>
+#include <algorithm>
+#include <limits>
+using namespace std;
+
+const int INF = numeric_limits<int>::max();
+const int IMPOSSIBLE = -1e9; // Some very small value representing impossible cases
+
+struct Edge
+{
+    int to, weight;
+    Edge(int t, int w) : to(t), weight(w) {}
+};
+
+int main()
+{
+    int N, M;
+    cin >> N >> M;
+
+    vector<vector<Edge>> graph(N);
+    for (int i = 0; i < M; ++i)
+    {
+        int U, V, W;
+        cin >> U >> V >> W;
+        graph[U].emplace_back(V, W);
+    }
+
+    int Q;
+    cin >> Q;
+    while (Q--)
+    {
+        int X, Y;
+        cin >> X >> Y;
+
+        vector<int> distance(N, INF);
+        vector<bool> visited(N, false);
+        priority_queue<pair<int, int>, vector<pair<int, int>>, greater<pair<int, int>>> pq;
+
+        distance[X] = 0;
+        pq.push({0, X});
+
+        while (!pq.empty())
+        {
+            int u = pq.top().second;
+            pq.pop();
+
+            if (visited[u])
+            {
+                continue;
+            }
+            visited[u] = true;
+
+            for (const Edge &e : graph[u])
+            {
+                int v = e.to;
+                int new_dist = distance[u] + e.weight;
+
+                if (new_dist < distance[v])
+                {
+                    distance[v] = new_dist;
+                    pq.push({new_dist, v});
+                }
+            }
+        }
+
+        if (distance[Y] == INF)
+        {
+            cout << "Impossible" << endl;
+        }
+        else if (distance[Y] == IMPOSSIBLE)
+        {
+            cout << "-Infinity" << endl;
+        }
+        else
+        {
+            cout << distance[Y] << endl;
+        }
+    }
+
+    return 0;
+}

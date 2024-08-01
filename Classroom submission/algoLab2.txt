@@ -1,0 +1,488 @@
+A. Topological Order
+Given a directed acyclic graph (DAG) find a valid topological order.
+Input
+First tine: N (0<N<=100000), number of nodes.
+Second line: M (0<N<=300000), number of edges.
+Next M lines, each: U V (0<=U, V<N), defines an edge from U to V.
+Output
+Topological Order. See sample for clarification
+Sample
+Input
+6
+5
+1 3
+1 2
+0 1
+3 4
+2 5
+
+Output
+0
+1
+2
+5
+3
+4
+
+51_A.cpp
+#include <bits/stdc++.h>
+using namespace std;
+
+vector<vector<int>> adjList;
+vector<bool> visited;
+stack<int> topologicalSort;
+
+void dfs(int node)
+{
+    visited[node] = true;
+
+    for (int neighbor : adjList[node])
+    {
+        if (!visited[neighbor])
+        {
+            dfs(neighbor);
+        }
+    }
+    topologicalSort.push(node);
+}
+
+void runDFS(int V)
+{
+    visited.assign(V, false);
+    for (int i = 0; i < V; i++)
+    {
+        if (!visited[i])
+        {
+            dfs(i);
+        }
+    }
+}
+
+void addEdge(int u, int v)
+{
+    adjList[u].push_back(v);
+    // For a directed graph, we don't add the reverse edge (u -> v) to avoid affecting cycle detection.
+}
+
+void printSort()
+{
+    while (!topologicalSort.empty())
+    {
+        cout << topologicalSort.top() << " ";
+        topologicalSort.pop();
+    }
+}
+
+int main()
+{
+    int n, m;
+    cin >> n >> m;
+
+    adjList.resize(n);
+    for (int i = 0; i < m; i++)
+    {
+        int u, v;
+        cin >> u >> v;
+        addEdge(u, v);
+    }
+
+    runDFS(n);
+    printSort();
+
+    return 0;
+}
+
+
+B. Counting Topological Orders
+
+Given a directed acyclic graph (DAG) find the number of valid topological orders.
+Input
+First line: N, number of nodes.
+Second line: M, number of edges.
+Next M lines, each: U V (0<=U, V<N), defines an edge from U to V.
+Output
+Number of topological orders. See sample for clarification
+Sample
+Input
+4
+4
+3 1
+3 2
+1 0
+2 0
+
+Output
+2
+
+51_B.cpp
+#include <bits/stdc++.h>
+using namespace std;
+
+class Graph
+{
+private:
+    vector<vector<int>> adjList;
+    vector<bool> visited;
+    vector<int> indegree;
+    vector<int> topologicalSort;
+    vector<bool> removed;
+    int count = 0;
+
+public:
+    Graph(int V)
+    {
+        adjList.resize(V);
+        visited.resize(V, false);
+        indegree.resize(V, 0);
+        removed.resize(V, false);
+    }
+
+    void addEdge(int u, int v)
+    {
+        adjList[u].push_back(v);
+        indegree[v]++;
+    }
+
+    void dfs()
+    {
+        int V = adjList.size();
+        for (int i = 0; i < V; i++)
+        {
+            if (!visited[i] && indegree[i] == 0)
+            {
+                visited[i] = true;
+                for (int neighbor : adjList[i])
+                {
+                    indegree[neighbor]--;
+                }
+                topologicalSort.push_back(i);
+                dfs();
+                for (int neighbor : adjList[i])
+                {
+                    indegree[neighbor]++;
+                }
+                topologicalSort.pop_back();
+                visited[i] = false;
+            }
+        }
+
+        // Check if all nodes are visited and form a valid topological order
+        if (topologicalSort.size() == V)
+        {
+            count++;
+        }
+    }
+
+    int countTopologicalOrders()
+    {
+        dfs();
+        return count;
+    }
+};
+
+int main()
+{
+    int n, m;
+    cin >> n >> m;
+
+    Graph g(n);
+    for (int i = 0; i < m; i++)
+    {
+        int u, v;
+        cin >> u >> v;
+        g.addEdge(u, v);
+    }
+
+    int result = g.countTopologicalOrders();
+    cout << result << endl;
+
+    return 0;
+}
+
+
+C. Articulation Points
+Given an undirected graph find all of its articulation points.
+Input
+First line: N ( O<N<=100000), number of nodes.
+Second line: M ( O<N<=300000). number of edges.
+Next M lines. each: U V ((0<=U, V<N), defines an edge between U and V.
+Output
+List all the articulation points in increasing order. See sample for clarification.
+Sample
+Input
+6
+5
+1 3
+1 2
+0 1
+3 4
+2 5
+
+Output
+1
+2
+3
+
+51_C.cpp
+#include <bits/stdc++.h>
+using namespace std;
+
+void APUtil(vector<vector<int>> &adj, int u, bool visited[],
+            int disc[], int low[], int &time, int parent,
+            bool isAP[])
+{
+    int children = 0;
+
+    visited[u] = true;
+
+    disc[u] = low[u] = ++time;
+
+    for (auto v : adj[u])
+    {
+
+        if (!visited[v])
+        {
+            children++;
+            APUtil(adj, v, visited, disc, low, time, u, isAP);
+
+            low[u] = min(low[u], low[v]);
+
+            if (parent != -1 && low[v] >= disc[u])
+                isAP[u] = true;
+        }
+
+        else if (v != parent)
+            low[u] = min(low[u], disc[v]);
+    }
+
+    if (parent == -1 && children > 1)
+        isAP[u] = true;
+}
+
+void AP(vector<vector<int>> &adj, int V)
+{
+    int disc[V] = {0};
+    int low[V];
+    bool visited[V] = {false};
+    bool isAP[V] = {false};
+    int time = 0, par = -1;
+
+    for (int u = 0; u < V; u++)
+        if (!visited[u])
+            APUtil(adj, u, visited, disc, low, time, par, isAP);
+
+    for (int u = 0; u < V; u++)
+        if (isAP[u] == true)
+            cout << u << " ";
+}
+
+int main()
+{
+    int n, m;
+    cin >> n >> m;
+
+    vector<vector<int>> adj(n);
+
+    for (int i = 0; i < m; i++)
+    {
+        int u, v;
+        cin >> u >> v;
+        adj[u].push_back(v);
+        adj[v].push_back(u);
+    }
+
+    AP(adj, n);
+    cout << endl;
+
+    return 0;
+}
+
+
+D. Grid Component
+
+Given an NxM grid. with blocked cells, find the number of connected empty areas. For each
+empty cell, it is connected with four cells (if empty): Up, Down. Left and Right You can never
+step into a blocked cell.
+Input
+First line: N (O<N<=100). M (O<M<=100).
+Next N lines, each contains M characters “.” indicates an empty cell. “#” indicates blocked cells.
+Output
+One line with the number of different connected areas. See sample for more clarification.
+
+Sample
+Input
+5 3
+...
+###
+...
+.#.
+...
+
+Output
+2
+
+51_D.cpp
+#include <iostream>
+#include <vector>
+
+using namespace std;
+
+void dfs(int row, int col, int N, int M, vector<vector<char>> &grid, vector<vector<bool>> &visited)
+{
+    if (row < 0 || row >= N || col < 0 || col >= M || grid[row][col] == '#' || visited[row][col])
+    {
+        return;
+    }
+
+    visited[row][col] = true;
+
+    // Explore the four directions (up, down, left, right)
+    dfs(row - 1, col, N, M, grid, visited);
+    dfs(row + 1, col, N, M, grid, visited);
+    dfs(row, col - 1, N, M, grid, visited);
+    dfs(row, col + 1, N, M, grid, visited);
+}
+
+int count_connected_areas(int N, int M, vector<vector<char>> &grid)
+{
+    vector<vector<bool>> visited(N, vector<bool>(M, false));
+    int connected_areas = 0;
+
+    for (int row = 0; row < N; row++)
+    {
+        for (int col = 0; col < M; col++)
+        {
+            if (!visited[row][col] && grid[row][col] == '.')
+            {
+                connected_areas++;
+                dfs(row, col, N, M, grid, visited);
+            }
+        }
+    }
+
+    return connected_areas;
+}
+
+int main()
+{
+    int N, M;
+    cin >> N >> M;
+
+    vector<vector<char>> grid(N, vector<char>(M));
+
+    for (int i = 0; i < N; i++)
+    {
+        for (int j = 0; j < M; j++)
+        {
+            cin >> grid[i][j];
+        }
+    }
+
+    int result = count_connected_areas(N, M, grid);
+    cout << result << endl;
+
+    return 0;
+}
+
+E. Removable Devices
+
+Mr. John is in charge of a network that connects n devices. Each device in the network is
+capable of connecting to another device directly or indirectly through a path containing other
+devices. A device is a removable device if that can be turned off or removed from the network
+without hampering the connectivity among other devices.
+Input
+First line: N ( O<N<=100000), number of devices.
+Second line: M ( O<N<=300000). number of direct connections.
+Next M lines. each: U V (0<=U, V<N), defines a direct connection between devices U and V.
+Output
+The number of devices removable devices.
+Sample
+Input
+6
+5
+1 3
+1 2
+0 1
+3 4
+2 5
+
+Output
+3
+
+51_E.cpp
+#include <bits/stdc++.h>
+using namespace std;
+
+void APUtil(vector<vector<int>> &adj, int u, bool visited[],
+            int disc[], int low[], int &time, int parent,
+            bool isAP[])
+{
+    int children = 0;
+
+    visited[u] = true;
+
+    disc[u] = low[u] = ++time;
+
+    for (auto v : adj[u])
+    {
+
+        if (!visited[v])
+        {
+            children++;
+            APUtil(adj, v, visited, disc, low, time, u, isAP);
+
+            low[u] = min(low[u], low[v]);
+
+            if (parent != -1 && low[v] >= disc[u])
+                isAP[u] = true;
+        }
+
+        else if (v != parent)
+            low[u] = min(low[u], disc[v]);
+    }
+
+    if (parent == -1 && children > 1)
+        isAP[u] = true;
+}
+
+int AP(vector<vector<int>> &adj, int V)
+{
+    int disc[V] = {0};
+    int count = 0;
+    int low[V];
+    bool visited[V] = {false};
+    bool isAP[V] = {false};
+    int time = 0, par = -1;
+
+    for (int u = 0; u < V; u++)
+        if (!visited[u])
+            APUtil(adj, u, visited, disc, low, time, par, isAP);
+
+    for (int u = 0; u < V; u++)
+        if (isAP[u] == true)
+            count++;
+
+    return count;
+}
+
+int main()
+{
+    int n, m;
+    cin >> n >> m;
+
+    vector<vector<int>> adj(n);
+
+    for (int i = 0; i < m; i++)
+    {
+        int u, v;
+        cin >> u >> v;
+        adj[u].push_back(v);
+        adj[v].push_back(u);
+    }
+
+    cout << n - AP(adj, n) << endl;
+
+    cout << endl;
+
+    return 0;
+}
