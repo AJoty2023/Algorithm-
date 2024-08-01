@@ -1,0 +1,60 @@
+#include <iostream>
+#include <deque>
+#include <vector>
+
+using namespace std;
+
+void printMaxInSubarrays(const vector<int>& arr, int n, int k) {
+    deque<int> dq;  // Initialize an empty deque to store indices of array elements
+
+    // Process the first window of k elements
+    for (int i = 0; i < k; ++i) {
+        // Remove elements from the back of the deque while they are smaller than the current element
+        while (!dq.empty() && arr[i] >= arr[dq.back()]) {
+            dq.pop_back();
+        }
+        // Add the current element's index to the deque
+        dq.push_back(i);
+    }
+
+    // Process the rest of the elements
+    for (int i = k; i < n; ++i) {
+        // The front of the deque is the largest element of the previous window
+        cout << arr[dq.front()] << " ";
+
+        // Remove elements from the front of the deque that are not part of the current window
+        while (!dq.empty() && dq.front() <= i - k) {
+            dq.pop_front();
+        }
+
+        // Remove elements from the back of the deque while they are smaller than the current element
+        while (!dq.empty() && arr[i] >= arr[dq.back()]) {
+            dq.pop_back();
+        }
+
+        // Add the current element's index to the deque
+        dq.push_back(i);
+    }
+
+    // Print the maximum element of the last window
+    cout << arr[dq.front()] << endl;
+}
+
+int main() {
+    int t;
+    cin >> t;  // Read the number of test cases
+
+    while (t--) {  // Process each test case
+        int n, k;
+        cin >> n >> k;  // Read the size of the array and the size of the subarray
+
+        vector<int> arr(n);
+        for (int i = 0; i < n; ++i) {
+            cin >> arr[i];  // Read the elements of the array
+        }
+
+        printMaxInSubarrays(arr, n, k);  // Print the maximum elements in each subarray of size k
+    }
+
+    return 0;  // End the program
+}
