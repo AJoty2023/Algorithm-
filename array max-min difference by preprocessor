@@ -1,0 +1,32 @@
+#include <bits/stdc++.h>
+#define MAX(a, b) ((a) > (b) ? (a) : (b))
+#define MIN(a, b) ((a) < (b) ? (a) : (b))
+using namespace std;
+int main(){
+
+    int n;
+    cin >> n;
+    vector<int> a(n);
+
+    for(int i=0; i<n; i++){
+        cin >> a[i];
+    }
+
+    int max_element = a[0];
+
+    for (int i=0; i<n ; i++){
+       max_element = MAX(max_element,i);
+    }
+
+    int min_element = a[0];
+
+    for (int i=0; i<n ; i++){
+       min_element = MIN(min_element,i);
+    }
+
+    cout << max_element - min_element;
+
+
+
+    return 0;
+}
