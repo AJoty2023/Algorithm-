@@ -1,0 +1,39 @@
+#include <iostream>
+using namespace std;
+
+class Point {
+private:
+    int x, y;
+
+public:
+    // Constructor to initialize the coordinates
+    Point(int x = 0, int y = 0) : x(x), y(y) {}
+
+    // Method to display the coordinates
+    void display() const {
+        cout << "(" << x << ", " << y << ")" << endl;
+    }
+
+    // Overload the unary minus operator
+    Point operator-() const {
+        return Point(-x, -y);
+    }
+};
+
+int main() {
+    // Create a Point object
+    Point p1(3, 4);
+
+    // Display the original point
+    cout << "Original Point: ";
+    p1.display();
+
+    // Apply the unary minus operator
+    Point p2 = -p1;
+
+    // Display the negated point
+    cout << "Negated Point: ";
+    p2.display();
+
+    return 0;
+}
