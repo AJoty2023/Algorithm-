@@ -1,0 +1,51 @@
+#include <iostream>
+using namespace std;
+
+class Complex {
+private:
+    double real;
+    double imag;
+
+public:
+    // Constructor to initialize the complex number
+    Complex(double r = 0, double i = 0) : real(r), imag(i) {}
+
+    // Method to display the complex number
+    void display() const {
+        cout << real << " + " << imag << "i" << endl;
+    }
+
+    // Method to input the complex number
+    void input() {
+        cout << "Enter real part: ";
+        cin >> real;
+        cout << "Enter imaginary part: ";
+        cin >> imag;
+    }
+
+    // Overload the binary + operator
+    Complex operator+(const Complex& other) const {
+        return Complex(real + other.real, imag + other.imag);
+    }
+};
+
+int main() {
+    Complex c1, c2;
+
+    // Input the first complex number
+    cout << "Enter the first complex number:\n";
+    c1.input();
+
+    // Input the second complex number
+    cout << "Enter the second complex number:\n";
+    c2.input();
+
+    // Add the two complex numbers using the overloaded + operator
+    Complex c3 = c1 + c2;
+
+    // Display the result
+    cout << "Result of addition: ";
+    c3.display();
+
+    return 0;
+}
