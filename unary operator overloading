@@ -14,6 +14,14 @@ public:
         cout << "(" << x << ", " << y << ")" << endl;
     }
 
+    // Method to input the coordinates
+    void input() {
+        cout << "Enter x coordinate: ";
+        cin >> x;
+        cout << "Enter y coordinate: ";
+        cin >> y;
+    }
+
     // Overload the unary minus operator
     Point operator-() const {
         return Point(-x, -y);
@@ -22,7 +30,11 @@ public:
 
 int main() {
     // Create a Point object
-    Point p1(3, 4);
+    Point p1;
+
+    // Get user input for the coordinates
+    cout << "Enter the coordinates for the point:" << endl;
+    p1.input();
 
     // Display the original point
     cout << "Original Point: ";
